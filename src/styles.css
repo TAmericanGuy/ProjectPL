@@ -1,0 +1,364 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+:root {
+  --bg: #050212;
+  --bg-panel: #050815;
+  --border-soft: #4c1d95;
+  --text-main: #f9fafb;
+  --text-muted: #a5b4fc;
+  --line: rgba(148, 163, 184, 0.5);
+  --road: #111827;
+  --road-line: #e5e7eb;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: radial-gradient(circle at top, #4c1d95 0, #020617 45%, #000 100%);
+  color: var(--text-main);
+}
+
+.app-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 0.8rem 1.5rem;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+}
+
+.app-header span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.app-main {
+  flex: 1;
+  padding: 0;
+  display: flex;
+  width: 100vw;
+}
+
+/* WRAPPER DO PÁTIO */
+
+.yard-wrapper {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  background: rgba(10, 16, 32, 0.95);
+  border-radius: 0px;
+  padding: 1rem;
+  border: none;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+
+/* LINHA SUPERIOR (A, B, P, Bays, PA) */
+.yard-top-row,
+.yard-bottom-row {
+  display: grid;
+  grid-template-columns:
+    1.1fr 26px   /* AREA A, rua */
+    1.1fr 26px   /* AREA B, rua */
+    1.1fr 26px   /* PAVEMENT P, rua */
+    1.1fr        /* BAYS */
+    26px         /* rua */
+    1.3fr;       /* PA + DETAIL (um pouco mais largo) */
+  column-gap: 0.8rem;
+}
+
+.yard-top-row {
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+
+.yard-bottom-row {
+  margin-top: 0.8rem;
+}
+
+/* Área C pega da coluna 1 até a 4 (A + rua + B + rua) */
+.area-c-strip {
+  grid-column: 1 / 5;
+}
+
+/* linhas um pouco mais altas só na Area C */
+.area-c-strip .parking-row {
+  min-height: 16px; /* ou 18, 20... ajusta no olho */
+}
+
+
+/* Área C pega da coluna 1 até a 4 (A + rua + B + rua) */
+.area-c-strip {
+  grid-column: 1 / 5;
+}
+
+/* linhas um pouco mais altas só na Area C */
+.area-c-strip .parking-row {
+  min-height: 16px; /* ou 18, 20... ajusta no olho */
+}
+
+/* RUAS */
+
+.yard-road-vertical {
+  width: 26px;
+  border-radius: 999px;
+  background: radial-gradient(circle at center, #1f2937 0, var(--road) 60%);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.9);
+  position: relative;
+}
+
+.yard-road-vertical::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-50%);
+  border-right: 2px dashed var(--road-line);
+  opacity: 0.7;
+}
+
+.yard-road-horizontal {
+  margin-top: 0.9rem;
+  margin-bottom: 0.4rem;
+  height: 30px;
+  border-radius: 999px;
+  background: radial-gradient(circle at center, #1f2937 0, var(--road) 60%);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.9);
+  position: relative;
+}
+
+.yard-road-horizontal::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  border-bottom: 2px dashed var(--road-line);
+  opacity: 0.7;
+}
+
+/* COLUNAS DE ÁREA */
+
+.parking-column {
+  flex: 1;
+  background: var(--bg-panel);
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.parking-column-header {
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #111827;
+}
+
+.parking-column-header h2 {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.parking-column-header span {
+  font-size: 0.7rem;
+}
+
+.parking-column-list {
+  padding: 0.3rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* faixa de baixo (AREA C) um pouco mais baixa */
+.parking-column--compact .parking-column-list {
+  max-height: 160px;
+}
+
+/* CADA FILEIRA – ESTILO PLANILHA */
+
+.parking-row {
+  --spots-per-row: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--spots-per-row), 1fr);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid rgba(75, 85, 99, 0.8);
+  background: #020617;
+}
+
+/* espaço entre linhas */
+.parking-column-list .parking-row + .parking-row {
+  margin-top: 2px;
+}
+
+/* CADA VAGA DENTRO DA FILEIRA */
+
+.parking-spot {
+  border-right: 1px solid rgba(55, 65, 81, 0.9);
+  background: repeating-linear-gradient(
+    -45deg,
+    #020617,
+    #020617 6px,
+    #050b1f 6px,
+    #050b1f 12px
+  );
+  color: #e5e7eb;
+  font-size: 0.62rem;
+  min-height: 20px;
+  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* última célula fecha a borda */
+.parking-row .parking-spot:last-child {
+  border-right: none;
+}
+
+/* estado ocupado (para o futuro) */
+.parking-spot--occupied {
+  background: #f97316;
+  color: #111827;
+  font-weight: 600;
+}
+
+.parking-strip {
+  flex: 1;
+  width: 100%;
+  background: var(--bg-panel);
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.parking-strip-list {
+  padding: 0.3rem 0.6rem 0.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.parking-strip-header {
+  padding: 0.3rem 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #111827;
+}
+
+.parking-strip-header h2 {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.parking-strip-header span {
+  font-size: 0.7rem;
+}
+
+/* BAYS (BODY / PAINT / MECHANIC) */
+
+.bays-stack {
+  flex: 1;
+  background: var(--bg-panel);
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 170px;
+}
+
+.bay-card {
+  flex: 1;
+  border-radius: 8px;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.bay-card--body {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.bay-card--paint {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.bay-card--mechanic {
+  background: #bbf7d0;
+  color: #14532d;
+}
+
+.pa-detail-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-card {
+  border-radius: 8px;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  background: #fef3c7;   /* um amarelinho claro */
+  color: #92400e;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
