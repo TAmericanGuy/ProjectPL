@@ -1,76 +1,72 @@
-// src/components/YardMap.jsx
-import { areas, bays } from "../parkingData";
-import ParkingColumn from "./ParkingColumn";
-import BaysStack from "./BaysStack";
-import ParkingStrip from "./ParkingStrip";
+import ParkingSpot from "./ParkingSpot";
 
-export default function YardMap({ occupied, onToggleSpot, availabilityByArea }) {
+export default function ParkingColumn({
+  area,
+  assignments,
+  vehiclesById,
+  availability,
+  onSelectSpot,
+  selectedSpotId,
+  getStatusColor,
+}) {
+  const total = area.rows * area.spotsPerRow;
+  const { occupied, free } = availability[area.id] ?? {
+    occupied: 0,
+    free: total,
+  };
+
+  const rows = Array.from({ length: area.rows }, (_, rowIndex) => {
+    const spots = Array.from({ length: area.spotsPerRow }, (_, spotIndex) => {
+      const number = rowIndex * area.spotsPerRow + spotIndex + 1;
+      const spotId = `${area.id}-${number}`;
+      const vehicleId = assignments[spotId];
+      const vehicle = vehicleId ? vehiclesById[vehicleId] : null;
+
+      return {
+        number,
+        spotId,
+        vehicle,
+      };
+    });
+
+    return spots;
+  });
+
   return (
-    <div className="yard-wrapper">
-      {/* LINHA PRINCIPAL (topo do pátio) */}
-      <div className="yard-top-row">
-        {/* BLOCO ESQUERDO: A + rua + B */}
-        <div className="yard-left-group">
-          <ParkingColumn
-            area={areas.AREA_A}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
-            availability={availabilityByArea}
-          />
-
-          <div className="yard-road-vertical" />
-
-          <ParkingColumn
-            area={areas.AREA_B}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
-            availability={availabilityByArea}
-          />
+    <section className="parking-column">
+      <header className="parking-column-header">
+        <div>
+          <h2>{area.name}</h2>
+          <span className="parking-column-code">Code {area.code}</span>
         </div>
-
-        {/* BLOCO MEIO: Pavement P + rua + Bays */}
-        <div className="yard-middle-group">
-          <ParkingColumn
-            area={areas.PAVEMENT_P}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
-            availability={availabilityByArea}
-          />
-
-          <div className="yard-road-vertical" />
-
-          <BaysStack bays={bays} />
+        <div className="parking-column-stats">
+          <span>{occupied} occupied</span>
+          <span>{free} open</span>
         </div>
-
-        {/* BLOCO DIREITO: PA + Detail */}
-        <div className="yard-right-group">
-          <ParkingColumn
-            area={areas.PAVE_PA}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
-            availability={availabilityByArea}
-          />
-
-          <div className="detail-card">
-            <span>DETAIL AREA</span>
+      </header>
+      <div className="parking-column-list">
+        {rows.map((row, index) => (
+          <div
+            className="parking-row"
+            key={`${area.id}-row-${index}`}
+            style={{ "--spots-per-row": area.spotsPerRow }}
+          >
+            {row.map((spot) => (
+              <ParkingSpot
+                key={spot.spotId}
+                spot={spot}
+                vehicle={spot.vehicle}
+                statusColor={spot.vehicle ? getStatusColor(spot.vehicle) : null}
+                onSelect={() => onSelectSpot(spot.spotId)}
+                isSelected={selectedSpotId === spot.spotId}
+              />
+            ))}
           </div>
-        </div>
+        ))}
       </div>
-
-      {/* RUA HORIZONTAL ENTRE TOPO E ÁREA C */}
-      <div className="yard-road-horizontal" />
-
-      {/* LINHA DE BAIXO: ÁREA C ALINHADA COM BLOCO ESQUERDO */}
-      <div className="yard-bottom-row">
-        <div className="yard-left-group area-c-strip">
-          <ParkingStrip
-            area={areas.AREA_C}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
-            availability={availabilityByArea}
-          />
-        </div>
-      </div>
-    </div>
+      <footer className="parking-column-footer">
+        <span>{total} total spots</span>
+      </footer>
+    </section>
   );
 }

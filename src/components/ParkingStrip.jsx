@@ -1,80 +1,72 @@
-// src/components/ParkingStrip.jsx
-import { useMemo } from "react";
 import ParkingSpot from "./ParkingSpot";
-import { getAreaTotalSpots } from "../parkingData";
 
 export default function ParkingStrip({
   area,
-  occupied,
-  onToggleSpot,
+  assignments,
+  vehiclesById,
   availability,
+  onSelectSpot,
+  selectedSpotId,
+  getStatusColor,
 }) {
-  const totalSpots = getAreaTotalSpots(area);
+  const total = area.rows * area.spotsPerRow;
+  const { occupied, free } = availability[area.id] ?? {
+    occupied: 0,
+    free: total,
+  };
 
-  const stats = availability?.[area.id];
-  const headerRight = stats
-    ? `${stats.total} spots / ${stats.free} available`
-    : `${totalSpots} spots`;
+  const rows = Array.from({ length: area.rows }, (_, rowIndex) => {
+    const spots = Array.from({ length: area.spotsPerRow }, (_, spotIndex) => {
+      const number = rowIndex * area.spotsPerRow + spotIndex + 1;
+      const spotId = `${area.id}-${number}`;
+      const vehicleId = assignments[spotId];
+      const vehicle = vehicleId ? vehiclesById[vehicleId] : null;
 
-  const rows = useMemo(() => {
-    const result = [];
+      return {
+        number,
+        spotId,
+        vehicle,
+      };
+    });
 
-    for (let rowIndex = 0; rowIndex < area.rows; rowIndex++) {
-      const rowSpots = [];
-
-      for (let col = 0; col < area.spotsPerRow; col++) {
-        const number = rowIndex * area.spotsPerRow + col + 1;
-        if (number > totalSpots) break;
-
-        rowSpots.push({
-          id: `${area.id}-${number}`,
-          number,
-        });
-      }
-
-      result.push(rowSpots);
-    }
-
-    return result;
-  }, [area.id, area.rows, area.spotsPerRow, totalSpots]);
+    return spots;
+  });
 
   return (
     <section className="parking-strip">
+      <header className="parking-strip-header">
+        <div>
+          <h2>{area.name}</h2>
+          <span className="parking-column-code">Code {area.code}</span>
+        </div>
+        <div className="parking-column-stats">
+          <span>{occupied} occupied</span>
+          <span>{free} open</span>
+        </div>
+      </header>
       <div className="parking-strip-list">
-        {rows.map((row, idx) => (
+        {rows.map((row, index) => (
           <div
-            key={`${area.id}-row-${idx}`}
             className="parking-row"
+            key={`${area.id}-row-${index}`}
             style={{ "--spots-per-row": area.spotsPerRow }}
           >
-            {row.map((spot) => {
-              const spotId = `${area.id}-${spot.number}`;
-              const isOccupied = !!occupied?.[spotId];
-
-              return (
-                <ParkingSpot
-                  key={spot.id}
-                  spot={spot}
-                  occupied={isOccupied}
-                  onToggle={
-                    onToggleSpot
-                      ? () => onToggleSpot(area.id, spot.number)
-                      : undefined
-                  }
-                />
-              );
-            })}
+            {row.map((spot) => (
+              <ParkingSpot
+                key={spot.spotId}
+                spot={spot}
+                vehicle={spot.vehicle}
+                statusColor={spot.vehicle ? getStatusColor(spot.vehicle) : null}
+                onSelect={() => onSelectSpot(spot.spotId)}
+                isSelected={selectedSpotId === spot.spotId}
+              />
+            ))}
           </div>
         ))}
       </div>
-
-      <header
-        className="parking-strip-header"
-        style={{ backgroundColor: area.color }}
-      >
-        <h2>{area.name}</h2>
-        <span>{headerRight}</span>
-      </header>
+      <footer className="parking-column-footer">
+        <span>{total} total spots</span>
+      </footer>
     </section>
   );
 }

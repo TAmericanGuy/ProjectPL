@@ -1,12 +1,33 @@
-// src/components/ParkingSpot.jsx
-export default function ParkingSpot({ spot, occupied, onToggle }) {
-  const className = `parking-spot${
-    occupied ? " parking-spot--occupied" : ""
-  }`;
+export default function ParkingSpot({
+  spot,
+  vehicle,
+  statusColor,
+  onSelect,
+  isSelected,
+}) {
+  const className = [
+    "parking-spot",
+    vehicle ? "parking-spot--occupied" : "parking-spot--empty",
+    isSelected ? "parking-spot--selected" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <div className={className} onClick={onToggle}>
-      {spot.number}
-    </div>
+    <button
+      type="button"
+      className={className}
+      onClick={onSelect}
+      style={{ "--spot-color": statusColor || "#111827" }}
+    >
+      <span className="parking-spot-number">{spot.number}</span>
+      {vehicle ? (
+        <span className="parking-spot-status">{vehicle.vinLast8}</span>
+      ) : (
+        <span className="parking-spot-status parking-spot-status--empty">
+          Empty
+        </span>
+      )}
+    </button>
   );
 }
