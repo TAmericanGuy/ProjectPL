@@ -10,13 +10,18 @@ export default function YardMap({
   onSelectSpot,
   selectedSpotId,
   getStatusColor,
+  totalOccupied,
+  totalSpots,
 }) {
   return (
     <div className="yard-wrapper">
       <header className="yard-header">
         <div>
-          <h2>Parking Layout</h2>
-          <p>Drag & drop support coming soon. Click a spot to inspect details.</p>
+          <h2>Yard Parking Map</h2>
+          <p>
+            {totalSpots} spots total / {totalSpots - totalOccupied} free /{" "}
+            {totalOccupied} occupied
+          </p>
         </div>
         <div className="status-legend">
           {Object.entries(statusPalette).map(([status, color]) => (
@@ -29,65 +34,54 @@ export default function YardMap({
       </header>
 
       <div className="yard-top-row">
-        <div className="yard-left-group">
-          <ParkingColumn
-            area={areas.AREA_A}
-            assignments={assignments}
-            vehiclesById={vehiclesById}
-            availability={availabilityByArea}
-            onSelectSpot={onSelectSpot}
-            selectedSpotId={selectedSpotId}
-            getStatusColor={getStatusColor}
-          />
+        <ParkingColumn
+          area={areas.AREA_A}
+          assignments={assignments}
+          vehiclesById={vehiclesById}
+          availability={availabilityByArea}
+          onSelectSpot={onSelectSpot}
+          selectedSpotId={selectedSpotId}
+          getStatusColor={getStatusColor}
+        />
 
-          <div className="yard-road-vertical" />
+        <ParkingColumn
+          area={areas.AREA_B}
+          assignments={assignments}
+          vehiclesById={vehiclesById}
+          availability={availabilityByArea}
+          onSelectSpot={onSelectSpot}
+          selectedSpotId={selectedSpotId}
+          getStatusColor={getStatusColor}
+        />
 
-          <ParkingColumn
-            area={areas.AREA_B}
-            assignments={assignments}
-            vehiclesById={vehiclesById}
-            availability={availabilityByArea}
-            onSelectSpot={onSelectSpot}
-            selectedSpotId={selectedSpotId}
-            getStatusColor={getStatusColor}
-          />
-        </div>
+        <ParkingColumn
+          area={areas.PAVEMENT_P}
+          assignments={assignments}
+          vehiclesById={vehiclesById}
+          availability={availabilityByArea}
+          onSelectSpot={onSelectSpot}
+          selectedSpotId={selectedSpotId}
+          getStatusColor={getStatusColor}
+        />
 
-        <div className="yard-middle-group">
-          <ParkingColumn
-            area={areas.PAVEMENT_P}
-            assignments={assignments}
-            vehiclesById={vehiclesById}
-            availability={availabilityByArea}
-            onSelectSpot={onSelectSpot}
-            selectedSpotId={selectedSpotId}
-            getStatusColor={getStatusColor}
-          />
-
-          <div className="yard-road-vertical" />
-
+        <div className="yard-bays-column">
           <BaysStack bays={bays} />
-        </div>
-
-        <div className="yard-right-group">
-          <ParkingColumn
-            area={areas.PAVE_PA}
-            assignments={assignments}
-            vehiclesById={vehiclesById}
-            availability={availabilityByArea}
-            onSelectSpot={onSelectSpot}
-            selectedSpotId={selectedSpotId}
-            getStatusColor={getStatusColor}
-          />
-
           <div className="detail-card">DETAIL BAY</div>
         </div>
+
+        <ParkingColumn
+          area={areas.PAVE_PA}
+          assignments={assignments}
+          vehiclesById={vehiclesById}
+          availability={availabilityByArea}
+          onSelectSpot={onSelectSpot}
+          selectedSpotId={selectedSpotId}
+          getStatusColor={getStatusColor}
+        />
       </div>
 
-      <div className="yard-road-horizontal" />
-
       <div className="yard-bottom-row">
-        <div className="yard-left-group area-c-strip">
+        <div className="yard-bottom-left">
           <ParkingStrip
             area={areas.AREA_C}
             assignments={assignments}
