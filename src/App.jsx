@@ -13,6 +13,7 @@ import {
 } from "./parkingData";
 
 const statusOptions = ["All", ...Object.keys(statusPalette)];
+const statusChoices = Object.keys(statusPalette);
 const todayString = () => new Date().toISOString().slice(0, 10);
 
 const defaultUsers = [
@@ -36,6 +37,7 @@ export default function App() {
   const [users, setUsers] = useState(defaultUsers);
   const [clients, setClients] = useState(initialClients);
   const [tags, setTags] = useState(defaultTags);
+  const [currentPage, setCurrentPage] = useState("dashboard");
 
   const [loginForm, setLoginForm] = useState({
     email: "admin@example.com",
@@ -70,6 +72,12 @@ export default function App() {
     serviceType: serviceTypes[0],
     expectedDate: todayString(),
     notes: "",
+  });
+  const [editForm, setEditForm] = useState({
+    spotId: "",
+    bodyStatus: statusChoices[0],
+    mechanicalStatus: statusChoices[0],
+    note: "",
   });
   const [newClientName, setNewClientName] = useState("");
   const [newTag, setNewTag] = useState({ name: "", color: "#60a5fa" });
@@ -126,20 +134,6 @@ export default function App() {
 
   const getStatusColor = (vehicle) =>
     statusPalette[getPrimaryStatus(vehicle)] ?? "#1f2937";
-
-  const handleSelectSpot = (spotId) => {
-    setSelectedSpotId(spotId);
-    const vehicleId = assignments[spotId];
-    if (vehicleId) {
-      setSelectedVehicle(vehiclesById[vehicleId]);
-      setActiveModal("vehicle");
-    }
-  };
-
-  const handleOpenVehicle = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setActiveModal("vehicle");
-  };
 
   const areaOptions = [
     "All",
@@ -234,6 +228,7 @@ export default function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setCurrentPage("dashboard");
   };
 
   const handleScanVin = () => {
@@ -381,6 +376,82 @@ export default function App() {
     setUsers((prev) => prev.filter((user) => user.id !== userId));
   };
 
+  const handleSelectSpot = (spotId) => {
+    setSelectedSpotId(spotId);
+    const vehicleId = assignments[spotId];
+    if (vehicleId) {
+      const vehicle = vehiclesById[vehicleId];
+      setSelectedVehicle(vehicle);
+      setEditForm({
+        spotId: spotId,
+        bodyStatus: vehicle.bodyStatus,
+        mechanicalStatus: vehicle.mechanicalStatus,
+        note: "",
+      });
+      setActiveModal("vehicle");
+    }
+  };
+
+  const handleOpenVehicle = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setEditForm({
+      spotId: vehicle.currentSpotId ?? "",
+      bodyStatus: vehicle.bodyStatus,
+      mechanicalStatus: vehicle.mechanicalStatus,
+      note: "",
+    });
+    setActiveModal("vehicle");
+  };
+
+  const handleSaveVehicle = () => {
+    if (!selectedVehicle) return;
+    const updated = {
+      ...selectedVehicle,
+      bodyStatus: editForm.bodyStatus,
+      mechanicalStatus: editForm.mechanicalStatus,
+      currentSpotId: editForm.spotId || null,
+    };
+
+    setVehicles((prev) =>
+      prev.map((vehicle) =>
+        vehicle.id === selectedVehicle.id ? updated : vehicle
+      )
+    );
+
+    setAssignments((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((spotId) => {
+        if (next[spotId] === selectedVehicle.id) {
+          delete next[spotId];
+        }
+      });
+      if (editForm.spotId) {
+        next[editForm.spotId] = selectedVehicle.id;
+      }
+      return next;
+    });
+
+    if (editForm.note.trim()) {
+      const logEntry = {
+        id: `NOTE-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        user: currentUser?.name ?? "System",
+        message: editForm.note.trim(),
+      };
+      updated.notes = [...updated.notes, logEntry];
+      setVehicles((prev) =>
+        prev.map((vehicle) =>
+          vehicle.id === selectedVehicle.id
+            ? { ...updated, notes: updated.notes }
+            : vehicle
+        )
+      );
+    }
+
+    setSelectedVehicle(updated);
+    setActiveModal(null);
+  };
+
   if (!currentUser) {
     return (
       <div className="auth-screen">
@@ -433,6 +504,249 @@ export default function App() {
     );
   }
 
+  if (currentPage === "settings") {
+    return (
+      <div className="app-root">
+        <header className="app-header">
+          <div>
+            <p className="app-eyebrow">Admin Tools</p>
+            <h1>Settings</h1>
+          </div>
+          <div className="app-header-actions">
+            <div className="app-user">
+              <span className="app-user-role">{currentUser.role}</span>
+              <strong>{currentUser.name}</strong>
+            </div>
+            <button
+              className="ghost-btn"
+              type="button"
+              onClick={() => setCurrentPage("dashboard")}
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </header>
+
+        <main className="settings-layout">
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Customers</h2>
+              <span>Create or remove customers</span>
+            </div>
+            <div className="list-grid">
+              {clients.map((client) => (
+                <div className="list-item" key={client.id}>
+                  <span>{client.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteClient(client.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+            <label>
+              New customer
+              <input
+                type="text"
+                value={newClientName}
+                onChange={(event) => setNewClientName(event.target.value)}
+                placeholder="Customer name"
+              />
+            </label>
+            <div className="modal-actions">
+              <button type="button" onClick={handleAddClient}>
+                Add customer
+              </button>
+            </div>
+          </section>
+
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Tags</h2>
+              <span>Define labels and colors</span>
+            </div>
+            <div className="list-grid">
+              {tags.map((tag) => (
+                <div className="list-item" key={tag.id}>
+                  <span className="tag-pill">
+                    <span
+                      className="tag-dot"
+                      style={{ background: tag.color }}
+                    />
+                    {tag.name}
+                  </span>
+                  <button type="button" onClick={() => handleDeleteTag(tag.id)}>
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="form-grid">
+              <label>
+                Tag name
+                <input
+                  type="text"
+                  value={newTag.name}
+                  onChange={(event) =>
+                    setNewTag((prev) => ({ ...prev, name: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Tag color
+                <input
+                  type="color"
+                  value={newTag.color}
+                  onChange={(event) =>
+                    setNewTag((prev) => ({ ...prev, color: event.target.value }))
+                  }
+                />
+              </label>
+            </div>
+            <div className="modal-actions">
+              <button type="button" onClick={handleAddTag}>
+                Add tag
+              </button>
+            </div>
+          </section>
+
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Users</h2>
+              <span>Manage staff access</span>
+            </div>
+            <div className="list-grid">
+              {users.map((user) => (
+                <div className="list-item" key={user.id}>
+                  <div>
+                    <strong>{user.name}</strong>
+                    <span className="muted">{user.email}</span>
+                  </div>
+                  <div className="list-actions">
+                    <span className="muted">{user.role}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteUser(user.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="form-grid">
+              <label>
+                Name
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={(event) =>
+                    setNewUser((prev) => ({
+                      ...prev,
+                      name: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(event) =>
+                    setNewUser((prev) => ({
+                      ...prev,
+                      email: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                Role
+                <select
+                  value={newUser.role}
+                  onChange={(event) =>
+                    setNewUser((prev) => ({
+                      ...prev,
+                      role: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="Supervisor">Supervisor</option>
+                  <option value="Driver">Driver</option>
+                </select>
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(event) =>
+                    setNewUser((prev) => ({
+                      ...prev,
+                      password: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+            <div className="modal-actions">
+              <button type="button" onClick={handleAddUser}>
+                Add user
+              </button>
+            </div>
+          </section>
+
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Activity Log</h2>
+              <span>Latest updates</span>
+            </div>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => setActiveModal("activity")}
+            >
+              See Activity Log
+            </button>
+          </section>
+        </main>
+
+        {activeModal === "activity" && (
+          <div className="modal-overlay" role="dialog" aria-modal="true">
+            <div className="modal-card modal-card--wide">
+              <div className="modal-header">
+                <h2>Recent Activity</h2>
+                <button type="button" onClick={() => setActiveModal(null)}>
+                  Close
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="activity-list">
+                  {activityLogs.map((log) => (
+                    <div className="activity-item" key={log.id}>
+                      <div>
+                        <strong>{log.action}</strong>
+                        <p>{log.entity}</p>
+                      </div>
+                      <div className="activity-meta">
+                        <span>{log.user}</span>
+                        <span>{log.timestamp}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="app-root">
       <header className="app-header">
@@ -458,6 +772,13 @@ export default function App() {
             onClick={() => setActiveModal("register")}
           >
             Register Vehicle
+          </button>
+          <button
+            className="ghost-btn"
+            type="button"
+            onClick={() => setCurrentPage("settings")}
+          >
+            Settings
           </button>
           <button className="ghost-btn" type="button" onClick={handleLogout}>
             Log out
@@ -585,6 +906,55 @@ export default function App() {
             totalOccupied={totalOccupied}
             totalSpots={TOTAL_SPOTS}
           />
+
+          <section className="panel table-panel table-panel--inline">
+            <div className="panel-header">
+              <h2>Vehicle Register</h2>
+              <span>{filteredVehicles.length} records</span>
+            </div>
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Client</th>
+                    <th>VIN</th>
+                    <th>Area</th>
+                    <th>Service Type</th>
+                    <th>Body Status</th>
+                    <th>Mechanical Status</th>
+                    <th>Entry Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredVehicles.map((vehicle) => {
+                    const areaName = vehicle.currentSpotId
+                      ? areas[vehicle.currentSpotId.split("-")[0]]?.name
+                      : "Scheduled";
+                    return (
+                      <tr
+                        key={vehicle.id}
+                        className="table-row"
+                        onClick={() => handleOpenVehicle(vehicle)}
+                      >
+                        <td>{vehicle.id}</td>
+                        <td>{getClientName(vehicle.clientId)}</td>
+                        <td>
+                          {vehicle.vinLast8}
+                          <span className="muted">{vehicle.vinFull}</span>
+                        </td>
+                        <td>{areaName}</td>
+                        <td>{vehicle.serviceType}</td>
+                        <td>{vehicle.bodyStatus}</td>
+                        <td>{vehicle.mechanicalStatus}</td>
+                        <td>{vehicle.entryDate}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </section>
 
         <aside className="app-side">
@@ -696,36 +1066,6 @@ export default function App() {
             </div>
           </section>
 
-          <section className="panel admin-panel">
-            <div className="panel-header">
-              <h2>Admin Settings</h2>
-              <span>Manage data</span>
-            </div>
-            <div className="admin-actions">
-              <button
-                type="button"
-                className="ghost-btn"
-                onClick={() => setActiveModal("customers")}
-              >
-                Manage Customers
-              </button>
-              <button
-                type="button"
-                className="ghost-btn"
-                onClick={() => setActiveModal("tags")}
-              >
-                Manage Tags
-              </button>
-              <button
-                type="button"
-                className="ghost-btn"
-                onClick={() => setActiveModal("users")}
-              >
-                Manage Users
-              </button>
-            </div>
-          </section>
-
           <section className="panel activity">
             <div className="panel-header">
               <h2>Activity Log</h2>
@@ -748,55 +1088,6 @@ export default function App() {
           </section>
         </aside>
       </main>
-
-      <section className="panel table-panel">
-        <div className="panel-header">
-          <h2>Vehicle Register</h2>
-          <span>{filteredVehicles.length} records</span>
-        </div>
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Client</th>
-                <th>VIN</th>
-                <th>Area</th>
-                <th>Service Type</th>
-                <th>Body Status</th>
-                <th>Mechanical Status</th>
-                <th>Entry Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredVehicles.map((vehicle) => {
-                const areaName = vehicle.currentSpotId
-                  ? areas[vehicle.currentSpotId.split("-")[0]]?.name
-                  : "Scheduled";
-                return (
-                  <tr
-                    key={vehicle.id}
-                    className="table-row"
-                    onClick={() => handleOpenVehicle(vehicle)}
-                  >
-                    <td>{vehicle.id}</td>
-                    <td>{getClientName(vehicle.clientId)}</td>
-                    <td>
-                      {vehicle.vinLast8}
-                      <span className="muted">{vehicle.vinFull}</span>
-                    </td>
-                    <td>{areaName}</td>
-                    <td>{vehicle.serviceType}</td>
-                    <td>{vehicle.bodyStatus}</td>
-                    <td>{vehicle.mechanicalStatus}</td>
-                    <td>{vehicle.entryDate}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
 
       {activeModal === "intake" && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
@@ -1022,201 +1313,6 @@ export default function App() {
         </div>
       )}
 
-      {activeModal === "customers" && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h2>Manage Customers</h2>
-              <button type="button" onClick={() => setActiveModal(null)}>
-                Close
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="list-grid">
-                {clients.map((client) => (
-                  <div className="list-item" key={client.id}>
-                    <span>{client.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteClient(client.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <label>
-                New customer
-                <input
-                  type="text"
-                  value={newClientName}
-                  onChange={(event) => setNewClientName(event.target.value)}
-                  placeholder="Customer name"
-                />
-              </label>
-              <div className="modal-actions">
-                <button type="button" onClick={handleAddClient}>
-                  Add customer
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeModal === "tags" && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h2>Manage Tags</h2>
-              <button type="button" onClick={() => setActiveModal(null)}>
-                Close
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="list-grid">
-                {tags.map((tag) => (
-                  <div className="list-item" key={tag.id}>
-                    <span className="tag-pill">
-                      <span
-                        className="tag-dot"
-                        style={{ background: tag.color }}
-                      />
-                      {tag.name}
-                    </span>
-                    <button type="button" onClick={() => handleDeleteTag(tag.id)}>
-                      Delete
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <label>
-                Tag name
-                <input
-                  type="text"
-                  value={newTag.name}
-                  onChange={(event) =>
-                    setNewTag((prev) => ({ ...prev, name: event.target.value }))
-                  }
-                  placeholder="Tag label"
-                />
-              </label>
-              <label>
-                Tag color
-                <input
-                  type="color"
-                  value={newTag.color}
-                  onChange={(event) =>
-                    setNewTag((prev) => ({ ...prev, color: event.target.value }))
-                  }
-                />
-              </label>
-              <div className="modal-actions">
-                <button type="button" onClick={handleAddTag}>
-                  Add tag
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeModal === "users" && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal-card modal-card--wide">
-            <div className="modal-header">
-              <h2>Manage Users</h2>
-              <button type="button" onClick={() => setActiveModal(null)}>
-                Close
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="list-grid">
-                {users.map((user) => (
-                  <div className="list-item" key={user.id}>
-                    <div>
-                      <strong>{user.name}</strong>
-                      <span className="muted">{user.email}</span>
-                    </div>
-                    <div className="list-actions">
-                      <span className="muted">{user.role}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteUser(user.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="form-grid">
-                <label>
-                  Name
-                  <input
-                    type="text"
-                    value={newUser.name}
-                    onChange={(event) =>
-                      setNewUser((prev) => ({
-                        ...prev,
-                        name: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  Email
-                  <input
-                    type="email"
-                    value={newUser.email}
-                    onChange={(event) =>
-                      setNewUser((prev) => ({
-                        ...prev,
-                        email: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  Role
-                  <select
-                    value={newUser.role}
-                    onChange={(event) =>
-                      setNewUser((prev) => ({
-                        ...prev,
-                        role: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="Admin">Admin</option>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Driver">Driver</option>
-                  </select>
-                </label>
-                <label>
-                  Password
-                  <input
-                    type="password"
-                    value={newUser.password}
-                    onChange={(event) =>
-                      setNewUser((prev) => ({
-                        ...prev,
-                        password: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-              </div>
-              <div className="modal-actions">
-                <button type="button" onClick={handleAddUser}>
-                  Add user
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {activeModal === "vehicle" && selectedVehicle && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-card modal-card--wide">
@@ -1229,7 +1325,10 @@ export default function App() {
             <div className="modal-body">
               <div className="vehicle-highlight">
                 <div>
-                  <p className="vehicle-id">{selectedVehicle.id}</p>
+                  <p className="vehicle-id">
+                    {selectedVehicle.id}
+                    <span className="vehicle-vin">{selectedVehicle.vinFull}</span>
+                  </p>
                   <p className="vehicle-client">
                     {getClientName(selectedVehicle.clientId)}
                   </p>
@@ -1243,10 +1342,6 @@ export default function App() {
               </div>
               <div className="vehicle-meta">
                 <div>
-                  <span>VIN</span>
-                  <strong>{selectedVehicle.vinFull}</strong>
-                </div>
-                <div>
                   <span>Entry</span>
                   <strong>{selectedVehicle.entryDate}</strong>
                 </div>
@@ -1256,15 +1351,62 @@ export default function App() {
                 </div>
                 <div>
                   <span>Body Status</span>
-                  <strong>{selectedVehicle.bodyStatus}</strong>
+                  <select
+                    value={editForm.bodyStatus}
+                    onChange={(event) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        bodyStatus: event.target.value,
+                      }))
+                    }
+                  >
+                    {statusChoices.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <span>Mechanical Status</span>
-                  <strong>{selectedVehicle.mechanicalStatus}</strong>
+                  <select
+                    value={editForm.mechanicalStatus}
+                    onChange={(event) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        mechanicalStatus: event.target.value,
+                      }))
+                    }
+                  >
+                    {statusChoices.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <span>Spot</span>
-                  <strong>{selectedVehicle.currentSpotId ?? "Scheduled"}</strong>
+                  <select
+                    value={editForm.spotId}
+                    onChange={(event) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        spotId: event.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Scheduled</option>
+                    {availableSpotOptions.map((spot) => (
+                      <option
+                        key={spot.id}
+                        value={spot.id}
+                        disabled={!spot.available && spot.id !== editForm.spotId}
+                      >
+                        {spot.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="notes">
@@ -1280,6 +1422,28 @@ export default function App() {
                 ) : (
                   <p className="empty-state">No notes available.</p>
                 )}
+              </div>
+              <label>
+                Add log entry
+                <textarea
+                  rows={3}
+                  value={editForm.note}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      note: event.target.value,
+                    }))
+                  }
+                  placeholder="Add update or comment"
+                />
+              </label>
+              <div className="modal-actions">
+                <button type="button" onClick={() => setActiveModal(null)}>
+                  Cancel
+                </button>
+                <button className="primary-btn" type="button" onClick={handleSaveVehicle}>
+                  Save Changes
+                </button>
               </div>
             </div>
           </div>
