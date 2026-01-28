@@ -4,7 +4,7 @@ import YardMap from "./components/YardMap";
 import {
   activityLogs,
   areas,
-  clients,
+  clients as initialClients,
   serviceTypes,
   spotAssignments as initialAssignments,
   statusPalette,
@@ -13,10 +13,9 @@ import {
 } from "./parkingData";
 
 const statusOptions = ["All", ...Object.keys(statusPalette)];
-const bodyStatusOptions = Object.keys(statusPalette);
-const mechanicalStatusOptions = Object.keys(statusPalette);
+const todayString = () => new Date().toISOString().slice(0, 10);
 
-const mockUsers = [
+const defaultUsers = [
   {
     id: "USR-001",
     name: "Alex Rivera",
@@ -26,8 +25,18 @@ const mockUsers = [
   },
 ];
 
+const defaultTags = [
+  { id: "TAG-01", name: "Priority", color: "#f97316" },
+  { id: "TAG-02", name: "Parts Hold", color: "#facc15" },
+  { id: "TAG-03", name: "Ready", color: "#4ade80" },
+];
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [users, setUsers] = useState(defaultUsers);
+  const [clients, setClients] = useState(initialClients);
+  const [tags, setTags] = useState(defaultTags);
+
   const [loginForm, setLoginForm] = useState({
     email: "admin@example.com",
     password: "admin123",
@@ -48,14 +57,27 @@ export default function App() {
     scheduledOnly: false,
   });
   const [intakeForm, setIntakeForm] = useState({
-    clientId: clients[0]?.id ?? "",
+    clientId: initialClients[0]?.id ?? "",
     vinFull: "",
     serviceType: serviceTypes[0],
-    bodyStatus: bodyStatusOptions[0],
-    mechanicalStatus: mechanicalStatusOptions[0],
-    esdDate: "",
+    intakeDate: todayString(),
     spotId: "",
     notes: "",
+  });
+  const [registerForm, setRegisterForm] = useState({
+    clientId: initialClients[0]?.id ?? "",
+    vinFull: "",
+    serviceType: serviceTypes[0],
+    expectedDate: todayString(),
+    notes: "",
+  });
+  const [newClientName, setNewClientName] = useState("");
+  const [newTag, setNewTag] = useState({ name: "", color: "#60a5fa" });
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "Supervisor",
   });
 
   const vehiclesById = useMemo(
@@ -165,7 +187,7 @@ export default function App() {
         scheduleMatches
       );
     });
-  }, [filters, vehicles]);
+  }, [filters, vehicles, clients]);
 
   const scheduledVehicles = vehicles.filter(
     (vehicle) => vehicle.esdDate && !vehicle.currentSpotId
@@ -193,7 +215,7 @@ export default function App() {
 
   const handleLogin = (event) => {
     event.preventDefault();
-    const user = mockUsers.find(
+    const user = users.find(
       (item) =>
         item.email === loginForm.email && item.password === loginForm.password
     );
@@ -214,6 +236,16 @@ export default function App() {
     setCurrentUser(null);
   };
 
+  const handleScanVin = () => {
+    const demoVins = [
+      "1N4AL3AP9GC123456",
+      "3FA6P0H73HR210445",
+      "5J6RW2H89JL028912",
+    ];
+    const vinFull = demoVins[Math.floor(Math.random() * demoVins.length)];
+    setIntakeForm((prev) => ({ ...prev, vinFull }));
+  };
+
   const handleSubmitIntake = (event) => {
     event.preventDefault();
     const vinFull = intakeForm.vinFull.trim();
@@ -225,11 +257,11 @@ export default function App() {
       clientId: intakeForm.clientId,
       vinFull,
       vinLast8,
-      entryDate: new Date().toISOString().slice(0, 10),
+      entryDate: intakeForm.intakeDate || todayString(),
       serviceType: intakeForm.serviceType,
-      bodyStatus: intakeForm.bodyStatus,
-      mechanicalStatus: intakeForm.mechanicalStatus,
-      esdDate: intakeForm.esdDate || null,
+      bodyStatus: "New Intake",
+      mechanicalStatus: "New Intake",
+      esdDate: null,
       currentSpotId: intakeForm.spotId || null,
       notes: intakeForm.notes
         ? [
@@ -257,12 +289,96 @@ export default function App() {
       clientId: clients[0]?.id ?? "",
       vinFull: "",
       serviceType: serviceTypes[0],
-      bodyStatus: bodyStatusOptions[0],
-      mechanicalStatus: mechanicalStatusOptions[0],
-      esdDate: "",
+      intakeDate: todayString(),
       spotId: "",
       notes: "",
     });
+  };
+
+  const handleSubmitRegister = (event) => {
+    event.preventDefault();
+    const vinFull = registerForm.vinFull.trim();
+    if (!vinFull) return;
+
+    const vinLast8 = vinFull.slice(-8).toUpperCase();
+    const newVehicle = {
+      id: `VH-${Date.now().toString().slice(-4)}`,
+      clientId: registerForm.clientId,
+      vinFull,
+      vinLast8,
+      entryDate: todayString(),
+      serviceType: registerForm.serviceType,
+      bodyStatus: "New Intake",
+      mechanicalStatus: "New Intake",
+      esdDate: registerForm.expectedDate || todayString(),
+      currentSpotId: null,
+      notes: registerForm.notes
+        ? [
+            {
+              id: `NOTE-${Date.now()}`,
+              timestamp: new Date().toISOString(),
+              user: currentUser?.name ?? "System",
+              message: registerForm.notes,
+            },
+          ]
+        : [],
+    };
+
+    setVehicles((prev) => [newVehicle, ...prev]);
+    setActiveModal(null);
+    setRegisterForm({
+      clientId: clients[0]?.id ?? "",
+      vinFull: "",
+      serviceType: serviceTypes[0],
+      expectedDate: todayString(),
+      notes: "",
+    });
+  };
+
+  const handleAddClient = () => {
+    if (!newClientName.trim()) return;
+    const newClient = {
+      id: `CL-${Date.now().toString().slice(-4)}`,
+      name: newClientName.trim(),
+    };
+    setClients((prev) => [...prev, newClient]);
+    setNewClientName("");
+  };
+
+  const handleDeleteClient = (clientId) => {
+    setClients((prev) => prev.filter((client) => client.id !== clientId));
+  };
+
+  const handleAddTag = () => {
+    if (!newTag.name.trim()) return;
+    const tag = {
+      id: `TAG-${Date.now().toString().slice(-4)}`,
+      name: newTag.name.trim(),
+      color: newTag.color,
+    };
+    setTags((prev) => [...prev, tag]);
+    setNewTag({ name: "", color: "#60a5fa" });
+  };
+
+  const handleDeleteTag = (tagId) => {
+    setTags((prev) => prev.filter((tag) => tag.id !== tagId));
+  };
+
+  const handleAddUser = () => {
+    if (!newUser.name.trim() || !newUser.email.trim() || !newUser.password) {
+      return;
+    }
+    const user = {
+      id: `USR-${Date.now().toString().slice(-4)}`,
+      ...newUser,
+    };
+    setUsers((prev) => [...prev, user]);
+    setNewUser({ name: "", email: "", password: "", role: "Supervisor" });
+  };
+
+  const handleDeleteUser = (userId) => {
+    if (currentUser?.id === userId) return;
+    setUsers((prev) => prev.filter((user) => user.id !== userId));
   };
 
   if (!currentUser) {
@@ -302,7 +418,9 @@ export default function App() {
                 required
               />
             </label>
-            {loginForm.error && <span className="form-error">{loginForm.error}</span>}
+            {loginForm.error && (
+              <span className="form-error">{loginForm.error}</span>
+            )}
             <button className="primary-btn" type="submit">
               Sign In
             </button>
@@ -334,11 +452,126 @@ export default function App() {
           >
             + New Vehicle Intake
           </button>
+          <button
+            className="ghost-btn"
+            type="button"
+            onClick={() => setActiveModal("register")}
+          >
+            Register Vehicle
+          </button>
           <button className="ghost-btn" type="button" onClick={handleLogout}>
             Log out
           </button>
         </div>
       </header>
+
+      <section className="panel filters filters--bar">
+        <div className="panel-header">
+          <h2>Filters</h2>
+          <span>VIN, client, status</span>
+        </div>
+        <div className="filters-grid">
+          <label>
+            Search VIN / ID
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(event) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  search: event.target.value,
+                }))
+              }
+              placeholder="Search by VIN or ID"
+            />
+          </label>
+          <label>
+            Status
+            <select
+              value={filters.status}
+              onChange={(event) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  status: event.target.value,
+                }))
+              }
+            >
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Area
+            <select
+              value={filters.area}
+              onChange={(event) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  area: event.target.value,
+                }))
+              }
+            >
+              {areaOptions.map((area) => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Client
+            <select
+              value={filters.client}
+              onChange={(event) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  client: event.target.value,
+                }))
+              }
+            >
+              {clientOptions.map((client) => (
+                <option key={client} value={client}>
+                  {client}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Service Type
+            <select
+              value={filters.serviceType}
+              onChange={(event) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  serviceType: event.target.value,
+                }))
+              }
+            >
+              {serviceOptions.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={filters.scheduledOnly}
+              onChange={(event) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  scheduledOnly: event.target.checked,
+                }))
+              }
+            />
+            Show scheduled only
+          </label>
+        </div>
+      </section>
 
       <main className="app-main">
         <section className="app-map">
@@ -374,7 +607,7 @@ export default function App() {
                 <strong>{vehicles.length - scheduledVehicles.length}</strong>
               </div>
               <div className="stat-card">
-                <p>ESD Scheduled</p>
+                <p>Scheduled</p>
                 <strong>{scheduledVehicles.length}</strong>
               </div>
             </div>
@@ -386,114 +619,6 @@ export default function App() {
                 </div>
               ))}
             </div>
-          </section>
-
-          <section className="panel filters">
-            <div className="panel-header">
-              <h2>Filters</h2>
-              <span>VIN, client, status</span>
-            </div>
-            <div className="form-grid">
-              <label>
-                Search VIN / ID
-                <input
-                  type="text"
-                  value={filters.search}
-                  onChange={(event) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      search: event.target.value,
-                    }))
-                  }
-                  placeholder="Search by VIN or ID"
-                />
-              </label>
-              <label>
-                Status
-                <select
-                  value={filters.status}
-                  onChange={(event) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      status: event.target.value,
-                    }))
-                  }
-                >
-                  {statusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Area
-                <select
-                  value={filters.area}
-                  onChange={(event) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      area: event.target.value,
-                    }))
-                  }
-                >
-                  {areaOptions.map((area) => (
-                    <option key={area} value={area}>
-                      {area}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Client
-                <select
-                  value={filters.client}
-                  onChange={(event) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      client: event.target.value,
-                    }))
-                  }
-                >
-                  {clientOptions.map((client) => (
-                    <option key={client} value={client}>
-                      {client}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Service Type
-                <select
-                  value={filters.serviceType}
-                  onChange={(event) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      serviceType: event.target.value,
-                    }))
-                  }
-                >
-                  {serviceOptions.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={filters.scheduledOnly}
-                onChange={(event) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    scheduledOnly: event.target.checked,
-                  }))
-                }
-              />
-              Show ESD scheduled only
-            </label>
           </section>
 
           <section className="panel selected-vehicle">
@@ -549,7 +674,7 @@ export default function App() {
 
           <section className="panel schedule">
             <div className="panel-header">
-              <h2>ESD Schedule</h2>
+              <h2>Schedule</h2>
               <span>Upcoming arrivals</span>
             </div>
             <div className="schedule-list">
@@ -560,7 +685,7 @@ export default function App() {
                     <p>{getClientName(vehicle.clientId)}</p>
                   </div>
                   <div>
-                    <span>ESD</span>
+                    <span>ETA</span>
                     <strong>{vehicle.esdDate}</strong>
                   </div>
                 </div>
@@ -568,6 +693,36 @@ export default function App() {
               {scheduledVehicles.length === 0 && (
                 <p className="empty-state">No vehicles scheduled.</p>
               )}
+            </div>
+          </section>
+
+          <section className="panel admin-panel">
+            <div className="panel-header">
+              <h2>Admin Settings</h2>
+              <span>Manage data</span>
+            </div>
+            <div className="admin-actions">
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={() => setActiveModal("customers")}
+              >
+                Manage Customers
+              </button>
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={() => setActiveModal("tags")}
+              >
+                Manage Tags
+              </button>
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={() => setActiveModal("users")}
+              >
+                Manage Users
+              </button>
             </div>
           </section>
 
@@ -672,18 +827,23 @@ export default function App() {
                 </select>
               </label>
               <label>
-                VIN (full)
-                <input
-                  type="text"
-                  value={intakeForm.vinFull}
-                  onChange={(event) =>
-                    setIntakeForm((prev) => ({
-                      ...prev,
-                      vinFull: event.target.value,
-                    }))
-                  }
-                  required
-                />
+                VIN #
+                <div className="input-row">
+                  <input
+                    type="text"
+                    value={intakeForm.vinFull}
+                    onChange={(event) =>
+                      setIntakeForm((prev) => ({
+                        ...prev,
+                        vinFull: event.target.value,
+                      }))
+                    }
+                    required
+                  />
+                  <button type="button" onClick={handleScanVin}>
+                    Scan VIN / QR
+                  </button>
+                </div>
               </label>
               <label>
                 Service Type
@@ -704,50 +864,14 @@ export default function App() {
                 </select>
               </label>
               <label>
-                Body Status
-                <select
-                  value={intakeForm.bodyStatus}
-                  onChange={(event) =>
-                    setIntakeForm((prev) => ({
-                      ...prev,
-                      bodyStatus: event.target.value,
-                    }))
-                  }
-                >
-                  {bodyStatusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Mechanical Status
-                <select
-                  value={intakeForm.mechanicalStatus}
-                  onChange={(event) =>
-                    setIntakeForm((prev) => ({
-                      ...prev,
-                      mechanicalStatus: event.target.value,
-                    }))
-                  }
-                >
-                  {mechanicalStatusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Estimated Start Date (ESD)
+                Intake Date
                 <input
                   type="date"
-                  value={intakeForm.esdDate}
+                  value={intakeForm.intakeDate}
                   onChange={(event) =>
                     setIntakeForm((prev) => ({
                       ...prev,
-                      esdDate: event.target.value,
+                      intakeDate: event.target.value,
                     }))
                   }
                 />
@@ -795,6 +919,300 @@ export default function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {activeModal === "register" && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>Register Vehicle Arrival</h2>
+              <button type="button" onClick={() => setActiveModal(null)}>
+                Close
+              </button>
+            </div>
+            <form className="modal-body" onSubmit={handleSubmitRegister}>
+              <label>
+                Client
+                <select
+                  value={registerForm.clientId}
+                  onChange={(event) =>
+                    setRegisterForm((prev) => ({
+                      ...prev,
+                      clientId: event.target.value,
+                    }))
+                  }
+                >
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                VIN #
+                <input
+                  type="text"
+                  value={registerForm.vinFull}
+                  onChange={(event) =>
+                    setRegisterForm((prev) => ({
+                      ...prev,
+                      vinFull: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </label>
+              <label>
+                Service Type
+                <select
+                  value={registerForm.serviceType}
+                  onChange={(event) =>
+                    setRegisterForm((prev) => ({
+                      ...prev,
+                      serviceType: event.target.value,
+                    }))
+                  }
+                >
+                  {serviceTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Expected Arrival Date
+                <input
+                  type="date"
+                  value={registerForm.expectedDate}
+                  onChange={(event) =>
+                    setRegisterForm((prev) => ({
+                      ...prev,
+                      expectedDate: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                Notes
+                <textarea
+                  rows={3}
+                  value={registerForm.notes}
+                  onChange={(event) =>
+                    setRegisterForm((prev) => ({
+                      ...prev,
+                      notes: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <div className="modal-actions">
+                <button type="button" onClick={() => setActiveModal(null)}>
+                  Cancel
+                </button>
+                <button className="primary-btn" type="submit">
+                  Register
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {activeModal === "customers" && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>Manage Customers</h2>
+              <button type="button" onClick={() => setActiveModal(null)}>
+                Close
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="list-grid">
+                {clients.map((client) => (
+                  <div className="list-item" key={client.id}>
+                    <span>{client.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteClient(client.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <label>
+                New customer
+                <input
+                  type="text"
+                  value={newClientName}
+                  onChange={(event) => setNewClientName(event.target.value)}
+                  placeholder="Customer name"
+                />
+              </label>
+              <div className="modal-actions">
+                <button type="button" onClick={handleAddClient}>
+                  Add customer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeModal === "tags" && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>Manage Tags</h2>
+              <button type="button" onClick={() => setActiveModal(null)}>
+                Close
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="list-grid">
+                {tags.map((tag) => (
+                  <div className="list-item" key={tag.id}>
+                    <span className="tag-pill">
+                      <span
+                        className="tag-dot"
+                        style={{ background: tag.color }}
+                      />
+                      {tag.name}
+                    </span>
+                    <button type="button" onClick={() => handleDeleteTag(tag.id)}>
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <label>
+                Tag name
+                <input
+                  type="text"
+                  value={newTag.name}
+                  onChange={(event) =>
+                    setNewTag((prev) => ({ ...prev, name: event.target.value }))
+                  }
+                  placeholder="Tag label"
+                />
+              </label>
+              <label>
+                Tag color
+                <input
+                  type="color"
+                  value={newTag.color}
+                  onChange={(event) =>
+                    setNewTag((prev) => ({ ...prev, color: event.target.value }))
+                  }
+                />
+              </label>
+              <div className="modal-actions">
+                <button type="button" onClick={handleAddTag}>
+                  Add tag
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeModal === "users" && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card modal-card--wide">
+            <div className="modal-header">
+              <h2>Manage Users</h2>
+              <button type="button" onClick={() => setActiveModal(null)}>
+                Close
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="list-grid">
+                {users.map((user) => (
+                  <div className="list-item" key={user.id}>
+                    <div>
+                      <strong>{user.name}</strong>
+                      <span className="muted">{user.email}</span>
+                    </div>
+                    <div className="list-actions">
+                      <span className="muted">{user.role}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="form-grid">
+                <label>
+                  Name
+                  <input
+                    type="text"
+                    value={newUser.name}
+                    onChange={(event) =>
+                      setNewUser((prev) => ({
+                        ...prev,
+                        name: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  Email
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(event) =>
+                      setNewUser((prev) => ({
+                        ...prev,
+                        email: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  Role
+                  <select
+                    value={newUser.role}
+                    onChange={(event) =>
+                      setNewUser((prev) => ({
+                        ...prev,
+                        role: event.target.value,
+                      }))
+                    }
+                  >
+                    <option value="Admin">Admin</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Driver">Driver</option>
+                  </select>
+                </label>
+                <label>
+                  Password
+                  <input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(event) =>
+                      setNewUser((prev) => ({
+                        ...prev,
+                        password: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+              <div className="modal-actions">
+                <button type="button" onClick={handleAddUser}>
+                  Add user
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

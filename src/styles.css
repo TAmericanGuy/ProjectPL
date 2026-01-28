@@ -224,6 +224,25 @@ select {
   font-size: 0.8rem;
 }
 
+.filters {
+  margin: 1.5rem 2rem 0;
+}
+
+.filters--bar .panel-header {
+  margin-bottom: 0.6rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.7rem 1rem;
+  align-items: end;
+}
+
+.filters-grid .checkbox {
+  margin-top: 0.2rem;
+}
+
 .selected-vehicle-body {
   display: flex;
   flex-direction: column;
@@ -689,6 +708,70 @@ th {
   border: 1px solid rgba(148, 163, 184, 0.4);
 }
 
+.input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.input-row button {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--text-main);
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.admin-panel .admin-actions {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.list-grid {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  font-size: 0.8rem;
+}
+
+.list-item button {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: transparent;
+  color: var(--text-main);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.list-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tag-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
 .auth-screen {
   min-height: 100vh;
   display: flex;
@@ -833,6 +916,10 @@ th {
 
   .table-panel {
     margin: 1.5rem 1rem 2rem;
+  }
+
+  .filters {
+    margin: 1.2rem 1rem 0;
   }
 }
 
