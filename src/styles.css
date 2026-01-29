@@ -641,6 +641,7 @@ th {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  max-height: 520px;
 }
 
 .parking-column-footer {
@@ -663,8 +664,8 @@ th {
   border-right: 1px solid rgba(30, 41, 59, 0.8);
   background: rgba(2, 6, 23, 0.9);
   color: var(--text-main);
-  font-size: 0.5rem;
-  min-height: 24px;
+  font-size: 0.48rem;
+  min-height: 20px;
   padding: 0.2rem 0.3rem;
   display: flex;
   flex-direction: row;
@@ -729,11 +730,6 @@ th {
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
-.bay-card-wrapper {
-  display: grid;
-  gap: 0.4rem;
-}
-
 .bay-card {
   flex: 1;
   border-radius: 12px;
@@ -742,9 +738,12 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
   font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
 .bay-card--body {
@@ -777,35 +776,16 @@ th {
   border: 1px solid rgba(148, 163, 184, 0.4);
 }
 
-.bay-spots {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.3rem;
+.bay-card-title {
+  font-size: 0.7rem;
 }
 
-.bay-spot {
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: rgba(2, 6, 23, 0.9);
-  color: var(--text-main);
-  border-radius: 8px;
-  font-size: 0.6rem;
-  padding: 0.35rem;
+.bay-card-meta {
+  font-size: 0.65rem;
+  color: #1f2937;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  cursor: pointer;
-}
-
-.bay-spot--occupied {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.9)),
-    var(--spot-color);
-  color: #0f172a;
-  font-weight: 600;
-}
-
-.bay-spot--selected {
-  outline: 2px solid #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
 }
 
 .input-row {
@@ -854,6 +834,12 @@ th {
   background: rgba(30, 41, 59, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.2);
   font-size: 0.8rem;
+}
+
+.list-item--button {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
 }
 
 .list-item button {

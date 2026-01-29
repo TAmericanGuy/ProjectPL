@@ -51,6 +51,7 @@ export default function App() {
   const [selectedSpotId, setSelectedSpotId] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [activeBayId, setActiveBayId] = useState(null);
   const [viewTab, setViewTab] = useState("map");
   const [tablePage, setTablePage] = useState(1);
   const [filters, setFilters] = useState({
@@ -238,6 +239,16 @@ export default function App() {
       })
     ),
   ];
+
+  const bayVehicles = (bayId) => {
+    const bay = bays.find((item) => item.id === bayId);
+    if (!bay) return [];
+    return Array.from({ length: bay.capacity }, (_, index) => {
+      const spotId = `BAY-${bayId}-${index + 1}`;
+      const vehicleId = assignments[spotId];
+      return vehicleId ? vehiclesById[vehicleId] : null;
+    }).filter(Boolean);
+  };
 
   const handleLogin = (event) => {
     event.preventDefault();
@@ -430,6 +441,11 @@ export default function App() {
       intakeDate: todayString(),
     }));
     setActiveModal("intake");
+  };
+
+  const handleOpenBay = (bayId) => {
+    setActiveBayId(bayId);
+    setActiveModal("bay");
   };
 
   const handleOpenVehicle = (vehicle) => {
@@ -962,6 +978,7 @@ export default function App() {
               selectedSpotId={selectedSpotId}
               getStatusColor={getStatusColor}
               filteredVehicleIds={filteredVehicleIds}
+              onOpenBay={handleOpenBay}
               totalOccupied={totalOccupied}
               totalSpots={TOTAL_SPOTS}
             />
@@ -1525,6 +1542,40 @@ export default function App() {
                 <button className="primary-btn" type="button" onClick={handleSaveVehicle}>
                   Save Changes
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeModal === "bay" && activeBayId && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card modal-card--wide">
+            <div className="modal-header">
+              <h2>{bays.find((bay) => bay.id === activeBayId)?.name}</h2>
+              <button type="button" onClick={() => setActiveModal(null)}>
+                Close
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="list-grid">
+                {bayVehicles(activeBayId).map((vehicle) => (
+                  <button
+                    key={vehicle.id}
+                    type="button"
+                    className="list-item list-item--button"
+                    onClick={() => handleOpenVehicle(vehicle)}
+                  >
+                    <div>
+                      <strong>{vehicle.id}</strong>
+                      <span className="muted">{vehicle.vinFull}</span>
+                    </div>
+                    <span className="muted">{vehicle.serviceType}</span>
+                  </button>
+                ))}
+                {bayVehicles(activeBayId).length === 0 && (
+                  <p className="empty-state">No vehicles in this bay.</p>
+                )}
               </div>
             </div>
           </div>

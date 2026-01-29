@@ -11,6 +11,7 @@ export default function YardMap({
   selectedSpotId,
   getStatusColor,
   filteredVehicleIds,
+  onOpenBay,
   totalOccupied,
   totalSpots,
 }) {
@@ -73,10 +74,7 @@ export default function YardMap({
             bays={bays}
             assignments={assignments}
             vehiclesById={vehiclesById}
-            onSelectSpot={onSelectSpot}
-            selectedSpotId={selectedSpotId}
-            getStatusColor={getStatusColor}
-            filteredVehicleIds={filteredVehicleIds}
+            onOpenBay={onOpenBay}
           />
         </div>
 
