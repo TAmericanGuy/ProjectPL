@@ -4,6 +4,7 @@ export default function ParkingSpot({
   statusColor,
   onSelect,
   isSelected,
+  isFilteredOut,
 }) {
   const className = [
     "parking-spot",
@@ -22,7 +23,9 @@ export default function ParkingSpot({
     >
       <span className="parking-spot-number">{spot.number}</span>
       {vehicle ? (
-        <span className="parking-spot-status">{vehicle.vinLast8}</span>
+        <span className="parking-spot-status">
+          {isFilteredOut ? "Occupied" : vehicle.vinLast8}
+        </span>
       ) : (
         <span className="parking-spot-status parking-spot-status--empty">
           Empty

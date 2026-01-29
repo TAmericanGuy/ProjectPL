@@ -10,6 +10,7 @@ export default function YardMap({
   onSelectSpot,
   selectedSpotId,
   getStatusColor,
+  filteredVehicleIds,
   totalOccupied,
   totalSpots,
 }) {
@@ -42,6 +43,7 @@ export default function YardMap({
           onSelectSpot={onSelectSpot}
           selectedSpotId={selectedSpotId}
           getStatusColor={getStatusColor}
+          filteredVehicleIds={filteredVehicleIds}
         />
 
         <ParkingColumn
@@ -52,6 +54,7 @@ export default function YardMap({
           onSelectSpot={onSelectSpot}
           selectedSpotId={selectedSpotId}
           getStatusColor={getStatusColor}
+          filteredVehicleIds={filteredVehicleIds}
         />
 
         <ParkingColumn
@@ -62,22 +65,34 @@ export default function YardMap({
           onSelectSpot={onSelectSpot}
           selectedSpotId={selectedSpotId}
           getStatusColor={getStatusColor}
+          filteredVehicleIds={filteredVehicleIds}
         />
 
         <div className="yard-bays-column">
-          <BaysStack bays={bays} />
-          <div className="detail-card">DETAIL BAY</div>
+          <BaysStack
+            bays={bays}
+            assignments={assignments}
+            vehiclesById={vehiclesById}
+            onSelectSpot={onSelectSpot}
+            selectedSpotId={selectedSpotId}
+            getStatusColor={getStatusColor}
+            filteredVehicleIds={filteredVehicleIds}
+          />
         </div>
 
-        <ParkingColumn
-          area={areas.PAVE_PA}
-          assignments={assignments}
-          vehiclesById={vehiclesById}
-          availability={availabilityByArea}
-          onSelectSpot={onSelectSpot}
-          selectedSpotId={selectedSpotId}
-          getStatusColor={getStatusColor}
-        />
+        <div className="yard-right-stack">
+          <ParkingColumn
+            area={areas.PAVE_PA}
+            assignments={assignments}
+            vehiclesById={vehiclesById}
+            availability={availabilityByArea}
+            onSelectSpot={onSelectSpot}
+            selectedSpotId={selectedSpotId}
+            getStatusColor={getStatusColor}
+            filteredVehicleIds={filteredVehicleIds}
+          />
+          <div className="detail-card">DETAIL BAY</div>
+        </div>
       </div>
 
       <div className="yard-bottom-row">
@@ -90,6 +105,7 @@ export default function YardMap({
             onSelectSpot={onSelectSpot}
             selectedSpotId={selectedSpotId}
             getStatusColor={getStatusColor}
+            filteredVehicleIds={filteredVehicleIds}
           />
         </div>
       </div>

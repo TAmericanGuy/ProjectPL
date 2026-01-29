@@ -8,6 +8,7 @@ export default function ParkingColumn({
   onSelectSpot,
   selectedSpotId,
   getStatusColor,
+  filteredVehicleIds,
 }) {
   const total = area.rows * area.spotsPerRow;
   const { occupied, free } = availability[area.id] ?? {
@@ -56,7 +57,18 @@ export default function ParkingColumn({
                 key={spot.spotId}
                 spot={spot}
                 vehicle={spot.vehicle}
-                statusColor={spot.vehicle ? getStatusColor(spot.vehicle) : null}
+                statusColor={
+                  spot.vehicle &&
+                  (!filteredVehicleIds ||
+                    filteredVehicleIds.has(spot.vehicle.id))
+                    ? getStatusColor(spot.vehicle)
+                    : null
+                }
+                isFilteredOut={
+                  spot.vehicle && filteredVehicleIds
+                    ? !filteredVehicleIds.has(spot.vehicle.id)
+                    : false
+                }
                 onSelect={() => onSelectSpot(spot.spotId)}
                 isSelected={selectedSpotId === spot.spotId}
               />

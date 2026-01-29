@@ -19,29 +19,29 @@ export const areas = {
     id: "AREA_A",
     name: "AREA A",
     code: "A",
-    rows: 12,
+    rows: 40,
     spotsPerRow: 3,
   },
   AREA_B: {
     id: "AREA_B",
     name: "AREA B",
     code: "B",
-    rows: 12,
+    rows: 40,
     spotsPerRow: 3,
   },
   PAVEMENT_P: {
     id: "PAVEMENT_P",
     name: "PAVEMENT AREA",
     code: "P",
-    rows: 10,
+    rows: 36,
     spotsPerRow: 2,
   },
   PAVE_PA: {
     id: "PAVE_PA",
     name: "PAVE AREA",
     code: "PA",
-    rows: 8,
-    spotsPerRow: 5,
+    rows: 40,
+    spotsPerRow: 6,
   },
   AREA_C: {
     id: "AREA_C",
@@ -53,9 +53,9 @@ export const areas = {
 };
 
 export const bays = [
-  { id: "BODY", name: "BODY AREA", type: "body" },
-  { id: "PAINT", name: "PAINT AREA", type: "paint" },
-  { id: "MECHANIC", name: "MECHANIC AREA", type: "mechanic" },
+  { id: "BODY", name: "BODY AREA", type: "body", capacity: 8 },
+  { id: "PAINT", name: "PAINT AREA", type: "paint", capacity: 8 },
+  { id: "MECHANIC", name: "MECHANIC AREA", type: "mechanic", capacity: 8 },
 ];
 
 export const clients = [
@@ -193,6 +193,66 @@ export const vehicles = [
       },
     ],
   },
+  {
+    id: "VH-2047",
+    clientId: "CL-200",
+    vinFull: "2T3WFREV6GW439812",
+    vinLast8: "W439812",
+    entryDate: "2024-04-20",
+    serviceType: "Bodywork Only",
+    bodyStatus: "In Progress",
+    mechanicalStatus: "New Intake",
+    esdDate: null,
+    currentSpotId: "BAY-BODY-2",
+    notes: [
+      {
+        id: "NOTE-08",
+        timestamp: "2024-04-21 13:30",
+        user: "Jonas Reed",
+        message: "Body bay assigned for dent repair.",
+      },
+    ],
+  },
+  {
+    id: "VH-2048",
+    clientId: "CL-300",
+    vinFull: "5TDDZRFH7FS124905",
+    vinLast8: "S124905",
+    entryDate: "2024-04-22",
+    serviceType: "Bodywork Only",
+    bodyStatus: "Estimate In Progress",
+    mechanicalStatus: "New Intake",
+    esdDate: null,
+    currentSpotId: "BAY-PAINT-5",
+    notes: [
+      {
+        id: "NOTE-09",
+        timestamp: "2024-04-22 15:12",
+        user: "Ava Lewis",
+        message: "Paint bay prep started.",
+      },
+    ],
+  },
+  {
+    id: "VH-2049",
+    clientId: "CL-400",
+    vinFull: "1C4RJFBG9FC678210",
+    vinLast8: "C678210",
+    entryDate: "2024-04-24",
+    serviceType: "Mechanical Only",
+    bodyStatus: "New Intake",
+    mechanicalStatus: "In Progress",
+    esdDate: null,
+    currentSpotId: "BAY-MECHANIC-3",
+    notes: [
+      {
+        id: "NOTE-10",
+        timestamp: "2024-04-24 09:40",
+        user: "Drew Patel",
+        message: "Diagnostics underway in mechanic bay.",
+      },
+    ],
+  },
 ];
 
 export const activityLogs = [
@@ -232,6 +292,9 @@ export const spotAssignments = {
   "PAVEMENT_P-7": "VH-2043",
   "PAVE_PA-12": "VH-2044",
   "AREA_C-8": "VH-2046",
+  "BAY-BODY-2": "VH-2047",
+  "BAY-PAINT-5": "VH-2048",
+  "BAY-MECHANIC-3": "VH-2049",
 };
 
 export const getAreaTotalSpots = (area) => area.rows * area.spotsPerRow;

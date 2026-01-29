@@ -4,6 +4,7 @@ import YardMap from "./components/YardMap";
 import {
   activityLogs,
   areas,
+  bays,
   clients as initialClients,
   serviceTypes,
   spotAssignments as initialAssignments,
@@ -185,6 +186,11 @@ export default function App() {
     });
   }, [filters, vehicles, clients]);
 
+  const filteredVehicleIds = useMemo(
+    () => new Set(filteredVehicles.map((vehicle) => vehicle.id)),
+    [filteredVehicles]
+  );
+
   const pageSize = 15;
   const totalPages = Math.max(1, Math.ceil(filteredVehicles.length / pageSize));
   const safeTablePage = Math.min(tablePage, totalPages);
@@ -205,17 +211,33 @@ export default function App() {
     }, {});
   }, [vehicles]);
 
-  const availableSpotOptions = Object.values(areas).flatMap((area) => {
-    return Array.from({ length: area.rows * area.spotsPerRow }, (_, index) => {
-      const number = index + 1;
-      const spotId = `${area.id}-${number}`;
-      return {
-        id: spotId,
-        label: `${area.name} - ${number}`,
-        available: !assignments[spotId],
-      };
-    });
-  });
+  const availableSpotOptions = [
+    ...Object.values(areas).flatMap((area) => {
+      return Array.from(
+        { length: area.rows * area.spotsPerRow },
+        (_, index) => {
+          const number = index + 1;
+          const spotId = `${area.id}-${number}`;
+          return {
+            id: spotId,
+            label: `${area.name} - ${number}`,
+            available: !assignments[spotId],
+          };
+        }
+      );
+    }),
+    ...bays.flatMap((bay) =>
+      Array.from({ length: bay.capacity }, (_, index) => {
+        const number = index + 1;
+        const spotId = `BAY-${bay.id}-${number}`;
+        return {
+          id: spotId,
+          label: `${bay.name} - ${number}`,
+          available: !assignments[spotId],
+        };
+      })
+    ),
+  ];
 
   const handleLogin = (event) => {
     event.preventDefault();
@@ -399,7 +421,15 @@ export default function App() {
         note: "",
       });
       setActiveModal("vehicle");
+      return;
     }
+
+    setIntakeForm((prev) => ({
+      ...prev,
+      spotId,
+      intakeDate: todayString(),
+    }));
+    setActiveModal("intake");
   };
 
   const handleOpenVehicle = (vehicle) => {
@@ -931,6 +961,7 @@ export default function App() {
               onSelectSpot={handleSelectSpot}
               selectedSpotId={selectedSpotId}
               getStatusColor={getStatusColor}
+              filteredVehicleIds={filteredVehicleIds}
               totalOccupied={totalOccupied}
               totalSpots={TOTAL_SPOTS}
             />

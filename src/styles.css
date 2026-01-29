@@ -543,6 +543,12 @@ th {
   gap: 0.6rem;
 }
 
+.yard-right-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem;
+}
+
 .yard-road-vertical,
 .yard-road-horizontal {
   background: radial-gradient(circle at center, #1f2937 0, var(--road) 60%);
@@ -723,6 +729,11 @@ th {
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
+.bay-card-wrapper {
+  display: grid;
+  gap: 0.4rem;
+}
+
 .bay-card {
   flex: 1;
   border-radius: 12px;
@@ -764,6 +775,37 @@ th {
   background: #fef3c7;
   color: #92400e;
   border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.bay-spots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3rem;
+}
+
+.bay-spot {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(2, 6, 23, 0.9);
+  color: var(--text-main);
+  border-radius: 8px;
+  font-size: 0.6rem;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  cursor: pointer;
+}
+
+.bay-spot--occupied {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.9)),
+    var(--spot-color);
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.bay-spot--selected {
+  outline: 2px solid #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
 }
 
 .input-row {
