@@ -1,73 +1,132 @@
-// src/components/YardMap.jsx
-import { areas, bays } from "../parkingData";
+import { areas, bays, statusPalette } from "../parkingData";
 import ParkingColumn from "./ParkingColumn";
 import BaysStack from "./BaysStack";
 import ParkingStrip from "./ParkingStrip";
 
-export default function YardMap({ occupied, onToggleSpot, availabilityByArea }) {
+export default function YardMap({
+  assignments,
+  vehiclesById,
+  availabilityByArea,
+  onSelectSpot,
+  selectedSpotId,
+  getStatusColor,
+  filteredVehicleIds,
+  onOpenBay,
+  totalOccupied,
+  totalSpots,
+}) {
+  const detailBay = bays.find((bay) => bay.id === "DETAIL");
+  const visibleBays = bays.filter((bay) => bay.id !== "DETAIL");
+  const detailVehicles = detailBay
+    ? Array.from({ length: detailBay.capacity }, (_, index) => {
+        const number = index + 1;
+        const spotId = `BAY-${detailBay.id}-${number}`;
+        const vehicleId = assignments[spotId];
+        return vehicleId ? vehiclesById[vehicleId] : null;
+      }).filter(Boolean)
+    : [];
+
   return (
     <div className="yard-wrapper">
-      {/* LINHA PRINCIPAL (topo do pátio) */}
+      <header className="yard-header">
+        <div>
+          <h2>Yard Parking Map</h2>
+          <p>
+            {totalSpots} spots total / {totalSpots - totalOccupied} free /{" "}
+            {totalOccupied} occupied
+          </p>
+        </div>
+        <div className="status-legend">
+          {Object.entries(statusPalette).map(([status, color]) => (
+            <span key={status} className="status-pill">
+              <span className="status-dot" style={{ background: color }} />
+              {status}
+            </span>
+          ))}
+        </div>
+      </header>
+
       <div className="yard-top-row">
-        {/* BLOCO ESQUERDO: A + rua + B */}
-        <div className="yard-left-group">
-          <ParkingColumn
-            area={areas.AREA_A}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
-            availability={availabilityByArea}
-          />
+        <ParkingColumn
+          area={areas.AREA_A}
+          assignments={assignments}
+          vehiclesById={vehiclesById}
+          availability={availabilityByArea}
+          onSelectSpot={onSelectSpot}
+          selectedSpotId={selectedSpotId}
+          getStatusColor={getStatusColor}
+          filteredVehicleIds={filteredVehicleIds}
+        />
 
-          <div className="yard-road-vertical" />
+        <ParkingColumn
+          area={areas.AREA_B}
+          assignments={assignments}
+          vehiclesById={vehiclesById}
+          availability={availabilityByArea}
+          onSelectSpot={onSelectSpot}
+          selectedSpotId={selectedSpotId}
+          getStatusColor={getStatusColor}
+          filteredVehicleIds={filteredVehicleIds}
+        />
 
-          <ParkingColumn
-            area={areas.AREA_B}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
-            availability={availabilityByArea}
+        <ParkingColumn
+          area={areas.PAVEMENT_P}
+          assignments={assignments}
+          vehiclesById={vehiclesById}
+          availability={availabilityByArea}
+          onSelectSpot={onSelectSpot}
+          selectedSpotId={selectedSpotId}
+          getStatusColor={getStatusColor}
+          filteredVehicleIds={filteredVehicleIds}
+        />
+
+        <div className="yard-bays-column">
+          <BaysStack
+            bays={visibleBays}
+            assignments={assignments}
+            vehiclesById={vehiclesById}
+            onOpenBay={onOpenBay}
           />
         </div>
 
-        {/* BLOCO MEIO: Pavement P + rua + Bays */}
-        <div className="yard-middle-group">
-          <ParkingColumn
-            area={areas.PAVEMENT_P}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
-            availability={availabilityByArea}
-          />
-
-          <div className="yard-road-vertical" />
-
-          <BaysStack bays={bays} />
-        </div>
-
-        {/* BLOCO DIREITO: PA + Detail */}
-        <div className="yard-right-group">
+        <div className="yard-right-stack">
           <ParkingColumn
             area={areas.PAVE_PA}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
+            assignments={assignments}
+            vehiclesById={vehiclesById}
             availability={availabilityByArea}
+            onSelectSpot={onSelectSpot}
+            selectedSpotId={selectedSpotId}
+            getStatusColor={getStatusColor}
+            filteredVehicleIds={filteredVehicleIds}
           />
-
-          <div className="detail-card">
-            <span>DETAIL AREA</span>
-          </div>
+          {detailBay && (
+            <button
+              type="button"
+              className="bay-card bay-card--detail detail-bay-card"
+              onClick={() => onOpenBay(detailBay.id)}
+            >
+              <div className="bay-card-title">{detailBay.name}</div>
+              <div className="bay-card-meta">
+                <span>{detailVehicles.length} vehicles</span>
+                <span>{detailBay.capacity} capacity</span>
+              </div>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* RUA HORIZONTAL ENTRE TOPO E ÁREA C */}
-      <div className="yard-road-horizontal" />
-
-      {/* LINHA DE BAIXO: ÁREA C ALINHADA COM BLOCO ESQUERDO */}
       <div className="yard-bottom-row">
-        <div className="yard-left-group area-c-strip">
+        <div className="yard-bottom-left">
           <ParkingStrip
             area={areas.AREA_C}
-            occupied={occupied}
-            onToggleSpot={onToggleSpot}
+            assignments={assignments}
+            vehiclesById={vehiclesById}
             availability={availabilityByArea}
+            onSelectSpot={onSelectSpot}
+            selectedSpotId={selectedSpotId}
+            getStatusColor={getStatusColor}
+            filteredVehicleIds={filteredVehicleIds}
           />
         </div>
       </div>
