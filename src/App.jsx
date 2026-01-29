@@ -50,6 +50,8 @@ export default function App() {
   const [selectedSpotId, setSelectedSpotId] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [viewTab, setViewTab] = useState("map");
+  const [tablePage, setTablePage] = useState(1);
   const [filters, setFilters] = useState({
     search: "",
     status: "All",
@@ -182,6 +184,14 @@ export default function App() {
       );
     });
   }, [filters, vehicles, clients]);
+
+  const pageSize = 15;
+  const totalPages = Math.max(1, Math.ceil(filteredVehicles.length / pageSize));
+  const safeTablePage = Math.min(tablePage, totalPages);
+  const tableSlice = filteredVehicles.slice(
+    (safeTablePage - 1) * pageSize,
+    safeTablePage * pageSize
+  );
 
   const scheduledVehicles = vehicles.filter(
     (vehicle) => vehicle.esdDate && !vehicle.currentSpotId
@@ -894,67 +904,107 @@ export default function App() {
         </div>
       </section>
 
+      <div className="panel view-tabs">
+        <button
+          type="button"
+          className={viewTab === "map" ? "tab-btn tab-btn--active" : "tab-btn"}
+          onClick={() => setViewTab("map")}
+        >
+          Map View
+        </button>
+        <button
+          type="button"
+          className={viewTab === "table" ? "tab-btn tab-btn--active" : "tab-btn"}
+          onClick={() => setViewTab("table")}
+        >
+          Table View
+        </button>
+      </div>
+
       <main className="app-main">
         <section className="app-map">
-          <YardMap
-            assignments={assignments}
-            vehiclesById={vehiclesById}
-            availabilityByArea={availabilityByArea}
-            onSelectSpot={handleSelectSpot}
-            selectedSpotId={selectedSpotId}
-            getStatusColor={getStatusColor}
-            totalOccupied={totalOccupied}
-            totalSpots={TOTAL_SPOTS}
-          />
-
-          <section className="panel table-panel table-panel--inline">
-            <div className="panel-header">
-              <h2>Vehicle Register</h2>
-              <span>{filteredVehicles.length} records</span>
-            </div>
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Client</th>
-                    <th>VIN</th>
-                    <th>Area</th>
-                    <th>Service Type</th>
-                    <th>Body Status</th>
-                    <th>Mechanical Status</th>
-                    <th>Entry Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredVehicles.map((vehicle) => {
-                    const areaName = vehicle.currentSpotId
-                      ? areas[vehicle.currentSpotId.split("-")[0]]?.name
-                      : "Scheduled";
-                    return (
-                      <tr
-                        key={vehicle.id}
-                        className="table-row"
-                        onClick={() => handleOpenVehicle(vehicle)}
-                      >
-                        <td>{vehicle.id}</td>
-                        <td>{getClientName(vehicle.clientId)}</td>
-                        <td>
-                          {vehicle.vinLast8}
-                          <span className="muted">{vehicle.vinFull}</span>
-                        </td>
-                        <td>{areaName}</td>
-                        <td>{vehicle.serviceType}</td>
-                        <td>{vehicle.bodyStatus}</td>
-                        <td>{vehicle.mechanicalStatus}</td>
-                        <td>{vehicle.entryDate}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          {viewTab === "map" ? (
+            <YardMap
+              assignments={assignments}
+              vehiclesById={vehiclesById}
+              availabilityByArea={availabilityByArea}
+              onSelectSpot={handleSelectSpot}
+              selectedSpotId={selectedSpotId}
+              getStatusColor={getStatusColor}
+              totalOccupied={totalOccupied}
+              totalSpots={TOTAL_SPOTS}
+            />
+          ) : (
+            <section className="panel table-panel table-panel--inline">
+              <div className="panel-header">
+                <h2>Vehicle Register</h2>
+                <span>
+                  {filteredVehicles.length} records • Page {safeTablePage} of{" "}
+                  {totalPages}
+                </span>
+              </div>
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Client</th>
+                      <th>VIN</th>
+                      <th>Area</th>
+                      <th>Service Type</th>
+                      <th>Body Status</th>
+                      <th>Mechanical Status</th>
+                      <th>Entry Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tableSlice.map((vehicle) => {
+                      const areaName = vehicle.currentSpotId
+                        ? areas[vehicle.currentSpotId.split("-")[0]]?.name
+                        : "Scheduled";
+                      return (
+                        <tr
+                          key={vehicle.id}
+                          className="table-row"
+                          onClick={() => handleOpenVehicle(vehicle)}
+                        >
+                          <td>{vehicle.id}</td>
+                          <td>{getClientName(vehicle.clientId)}</td>
+                          <td>
+                            {vehicle.vinLast8}
+                            <span className="muted">{vehicle.vinFull}</span>
+                          </td>
+                          <td>{areaName}</td>
+                          <td>{vehicle.serviceType}</td>
+                          <td>{vehicle.bodyStatus}</td>
+                          <td>{vehicle.mechanicalStatus}</td>
+                          <td>{vehicle.entryDate}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="table-pagination">
+                <button
+                  type="button"
+                  onClick={() => setTablePage((prev) => Math.max(1, prev - 1))}
+                  disabled={tablePage === 1}
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTablePage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={tablePage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            </section>
+          )}
         </section>
 
         <aside className="app-side">

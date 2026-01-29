@@ -229,6 +229,29 @@ select {
   margin: 1.5rem 2rem 0;
 }
 
+.view-tabs {
+  margin: 1rem 2rem 0;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.tab-btn {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: transparent;
+  color: var(--text-main);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tab-btn--active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #e0e7ff;
+}
+
 .filters--bar .panel-header {
   margin-bottom: 0.6rem;
 }
@@ -377,6 +400,27 @@ select {
 
 .table-panel--inline {
   margin: 1.5rem 0 0;
+}
+
+.table-pagination {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.table-pagination button {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: transparent;
+  color: var(--text-main);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.table-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .table-wrapper {
@@ -739,10 +783,14 @@ th {
 }
 
 .settings-layout {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
   padding: 1.5rem 2rem 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.settings-layout > .panel {
+  flex: 1 1 320px;
 }
 
 .admin-panel .admin-actions {
@@ -941,6 +989,10 @@ th {
 
   .filters {
     margin: 1.2rem 1rem 0;
+  }
+
+  .view-tabs {
+    margin: 1rem 1rem 0;
   }
 
   .settings-layout {
