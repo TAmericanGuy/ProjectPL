@@ -70,6 +70,14 @@ export default function App() {
     spotId: "",
     notes: "",
   });
+  const [releaseForm, setReleaseForm] = useState({
+    vinFull: "",
+    contactName: "",
+    contactPhone: "",
+    companyName: "",
+    releaseDate: todayString(),
+    error: "",
+  });
   const [registerForm, setRegisterForm] = useState({
     clientId: initialClients[0]?.id ?? "",
     vinFull: "",
@@ -190,6 +198,10 @@ export default function App() {
   const filteredVehicleIds = useMemo(
     () => new Set(filteredVehicles.map((vehicle) => vehicle.id)),
     [filteredVehicles]
+  );
+  const releaseCandidates = useMemo(
+    () => vehicles.filter((vehicle) => vehicle.currentSpotId),
+    [vehicles]
   );
 
   const pageSize = 15;
@@ -370,6 +382,70 @@ export default function App() {
       serviceType: serviceTypes[0],
       expectedDate: todayString(),
       notes: "",
+    });
+  };
+
+  const handleSubmitRelease = (event) => {
+    event.preventDefault();
+    const vinFull = releaseForm.vinFull.trim();
+    if (!vinFull) {
+      setReleaseForm((prev) => ({
+        ...prev,
+        error: "Please select a vehicle VIN.",
+      }));
+      return;
+    }
+
+    const vehicle = vehicles.find(
+      (item) => item.vinFull.toLowerCase() === vinFull.toLowerCase()
+    );
+
+    if (!vehicle) {
+      setReleaseForm((prev) => ({
+        ...prev,
+        error: "No matching vehicle found in the yard.",
+      }));
+      return;
+    }
+
+    if (getPrimaryStatus(vehicle) !== "Completed") {
+      const shouldRelease = window.confirm(
+        "This vehicle is not marked Completed. Release anyway?"
+      );
+      if (!shouldRelease) {
+        return;
+      }
+    }
+
+    setVehicles((prev) =>
+      prev.map((item) =>
+        item.id === vehicle.id ? { ...item, currentSpotId: null } : item
+      )
+    );
+
+    setAssignments((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((spotId) => {
+        if (next[spotId] === vehicle.id) {
+          delete next[spotId];
+        }
+      });
+      return next;
+    });
+
+    if (selectedSpotId && assignments[selectedSpotId] === vehicle.id) {
+      setSelectedSpotId(null);
+      setSelectedVehicle(null);
+    }
+
+    setActiveModal(null);
+    setReleaseForm({
+      vinFull: "",
+      contactName: "",
+      contactPhone: "",
+      companyName: "",
+      releaseDate: todayString(),
+      error: "",
     });
   };
 
@@ -821,6 +897,13 @@ export default function App() {
             onClick={() => setActiveModal("intake")}
           >
             + New Vehicle Intake
+          </button>
+          <button
+            className="ghost-btn"
+            type="button"
+            onClick={() => setActiveModal("release")}
+          >
+            Release Vehicle
           </button>
           <button
             className="ghost-btn"
@@ -1404,6 +1487,117 @@ export default function App() {
                 </button>
                 <button className="primary-btn" type="submit">
                   Register
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {activeModal === "release" && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>Release Vehicle</h2>
+              <button type="button" onClick={() => setActiveModal(null)}>
+                Close
+              </button>
+            </div>
+            <form className="modal-body" onSubmit={handleSubmitRelease}>
+              <label>
+                VIN #
+                <input
+                  type="text"
+                  value={releaseForm.vinFull}
+                  onChange={(event) =>
+                    setReleaseForm((prev) => ({
+                      ...prev,
+                      vinFull: event.target.value,
+                      error: "",
+                    }))
+                  }
+                  list="release-vin-list"
+                  placeholder="Enter full VIN"
+                  required
+                />
+                <datalist id="release-vin-list">
+                  {releaseCandidates.map((vehicle) => (
+                    <option
+                      key={vehicle.id}
+                      value={vehicle.vinFull}
+                    >{`${vehicle.id} • ${vehicle.vinLast8}`}</option>
+                  ))}
+                </datalist>
+              </label>
+              <div className="modal-grid">
+                <label>
+                  Released To
+                  <input
+                    type="text"
+                    value={releaseForm.contactName}
+                    onChange={(event) =>
+                      setReleaseForm((prev) => ({
+                        ...prev,
+                        contactName: event.target.value,
+                      }))
+                    }
+                    placeholder="Full name"
+                    required
+                  />
+                </label>
+                <label>
+                  Phone Number
+                  <input
+                    type="tel"
+                    value={releaseForm.contactPhone}
+                    onChange={(event) =>
+                      setReleaseForm((prev) => ({
+                        ...prev,
+                        contactPhone: event.target.value,
+                      }))
+                    }
+                    placeholder="(555) 555-5555"
+                    required
+                  />
+                </label>
+              </div>
+              <label>
+                Company
+                <input
+                  type="text"
+                  value={releaseForm.companyName}
+                  onChange={(event) =>
+                    setReleaseForm((prev) => ({
+                      ...prev,
+                      companyName: event.target.value,
+                    }))
+                  }
+                  placeholder="Company name"
+                />
+              </label>
+              <label>
+                Release Date
+                <input
+                  type="date"
+                  value={releaseForm.releaseDate}
+                  onChange={(event) =>
+                    setReleaseForm((prev) => ({
+                      ...prev,
+                      releaseDate: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </label>
+              {releaseForm.error && (
+                <span className="form-error">{releaseForm.error}</span>
+              )}
+              <div className="modal-actions">
+                <button type="button" onClick={() => setActiveModal(null)}>
+                  Cancel
+                </button>
+                <button className="primary-btn" type="submit">
+                  Release Vehicle
                 </button>
               </div>
             </form>

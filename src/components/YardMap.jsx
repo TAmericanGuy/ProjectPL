@@ -89,7 +89,6 @@ export default function YardMap({
             getStatusColor={getStatusColor}
             filteredVehicleIds={filteredVehicleIds}
           />
-          <div className="detail-card">DETAIL BAY</div>
         </div>
       </div>
 

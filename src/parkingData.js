@@ -53,9 +53,10 @@ export const areas = {
 };
 
 export const bays = [
-  { id: "BODY", name: "BODY AREA", type: "body", capacity: 8 },
-  { id: "PAINT", name: "PAINT AREA", type: "paint", capacity: 8 },
-  { id: "MECHANIC", name: "MECHANIC AREA", type: "mechanic", capacity: 8 },
+  { id: "BODY", name: "BODY AREA", type: "body", capacity: 30 },
+  { id: "PAINT", name: "PAINT AREA", type: "paint", capacity: 30 },
+  { id: "MECHANIC", name: "MECHANIC AREA", type: "mechanic", capacity: 30 },
+  { id: "DETAIL", name: "DETAIL AREA", type: "detail", capacity: 30 },
 ];
 
 export const clients = [

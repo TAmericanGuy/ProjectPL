@@ -24,7 +24,14 @@ export default function ParkingSpot({
       <span className="parking-spot-number">{spot.number}</span>
       {vehicle ? (
         <span className="parking-spot-status">
-          {isFilteredOut ? "Occupied" : vehicle.vinLast8}
+          {isFilteredOut ? (
+            "Occupied"
+          ) : (
+            <>
+              <span className="parking-spot-vin">{vehicle.vinLast8}</span>
+              <span className="parking-spot-vin-full">{vehicle.vinFull}</span>
+            </>
+          )}
         </span>
       ) : (
         <span className="parking-spot-status parking-spot-status--empty">

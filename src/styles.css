@@ -664,14 +664,14 @@ th {
   border-right: 1px solid rgba(30, 41, 59, 0.8);
   background: rgba(2, 6, 23, 0.9);
   color: var(--text-main);
-  font-size: 0.48rem;
-  min-height: 20px;
-  padding: 0.2rem 0.3rem;
+  font-size: 0.58rem;
+  min-height: 28px;
+  padding: 0.3rem 0.4rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 0.2rem;
+  gap: 0.35rem;
   cursor: pointer;
   text-align: left;
   position: relative;
@@ -694,18 +694,32 @@ th {
 }
 
 .parking-spot-number {
-  font-size: 0.5rem;
+  font-size: 0.6rem;
   opacity: 0.7;
 }
 
 .parking-spot-status {
-  font-size: 0.45rem;
-  letter-spacing: 0.05em;
+  font-size: 0.52rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
 }
 
 .parking-spot-status--empty {
   opacity: 0.6;
+}
+
+.parking-spot-vin {
+  font-weight: 700;
+}
+
+.parking-spot-vin-full {
+  font-size: 0.5rem;
+  text-transform: none;
+  opacity: 0.8;
 }
 
 .parking-row .parking-spot:last-child {
@@ -761,19 +775,9 @@ th {
   color: #14532d;
 }
 
-.detail-card {
-  border-radius: 12px;
-  padding: 0.7rem;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
+.bay-card--detail {
   background: #fef3c7;
   color: #92400e;
-  border: 1px solid rgba(148, 163, 184, 0.4);
 }
 
 .bay-card-title {
@@ -786,6 +790,12 @@ th {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
 }
 
 .input-row {
